@@ -510,7 +510,7 @@ void BloodImpactCallback(const CEffectData& data)
 		// Find which sort of blood we are
 		for (int i = 0; i < ARRAYSIZE(bloodCallbacks); i++)
 		{
-			if (bloodCallbacks[i].nColor == data.m_nColor && bloodCallbacks[i].iBloodType == r_blood_particle_type.GetInt())
+			if (bloodCallbacks[i].nColor == data.m_nColor)
 			{
 				QAngle	vecAngles;
 				VectorAngles(-data.m_vNormal, vecAngles);
