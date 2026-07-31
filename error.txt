@@ -1,0 +1,5 @@
+Severity	Code	Description	Project	File	Line	Suppression State	Details
+Error	LNK1181	cannot open input file '..\..\lib\public\tier1.lib'	Client (HL2)	C:\GitHub\Source-2004-in-2013\sp\src\game\client\LINK	1		
+Error	C2220	the following warning is treated as an error	tier1	C:\GitHub\Source-2004-in-2013\sp\src\tier1\snappy-stubs-internal.h	151		
+Error	LNK1181	cannot open input file '..\..\lib\public\tier1.lib'	Server (HL2)	C:\GitHub\Source-2004-in-2013\sp\src\game\server\LINK	1		
+Warning	C4722	'snappy::LogMessageCrash::~LogMessageCrash': destructor never returns, potential memory leak	tier1	C:\GitHub\Source-2004-in-2013\sp\src\tier1\snappy-stubs-internal.h	151		
