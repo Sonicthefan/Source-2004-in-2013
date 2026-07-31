@@ -35,9 +35,6 @@
 
 int g_fCombineQuestion;				// true if an idle grunt asked a question. Cleared when someone answers. YUCK old global from grunt code
 
-#define COMBINE_SKIN_DEFAULT		0
-#define COMBINE_SKIN_SHOTGUNNER		1
-
 
 #define COMBINE_GRENADE_THROW_SPEED 650
 #define COMBINE_GRENADE_TIMER		3.5
@@ -2565,7 +2562,7 @@ void CNPC_Combine::SpeakSentence( int sentenceType )
 //=========================================================
 // PainSound
 //=========================================================
-void CNPC_Combine::PainSound ( void )
+void CNPC_Combine::PainSound(const CTakeDamageInfo& info)
 {
 	// NOTE: The response system deals with this at the moment
 	if ( GetFlags() & FL_DISSOLVING )
@@ -3140,22 +3137,10 @@ WeaponProficiency_t CNPC_Combine::CalcWeaponProficiency( CBaseCombatWeapon *pWea
 {
 	if( FClassnameIs( pWeapon, "weapon_ar2" ) )
 	{
-		if( hl2_episodic.GetBool() )
-		{
-			return WEAPON_PROFICIENCY_VERY_GOOD;
-		}
-		else
-		{
 			return WEAPON_PROFICIENCY_GOOD;
-		}
 	}
 	else if( FClassnameIs( pWeapon, "weapon_shotgun" )	)
 	{
-		if( m_nSkin != COMBINE_SKIN_SHOTGUNNER )
-		{
-			m_nSkin = COMBINE_SKIN_SHOTGUNNER;
-		}
-
 		return WEAPON_PROFICIENCY_PERFECT;
 	}
 	else if( FClassnameIs( pWeapon, "weapon_smg1" ) )

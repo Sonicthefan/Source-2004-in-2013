@@ -1642,10 +1642,6 @@ ConVar scene_flatturn( "scene_flatturn", "1" );
 
 bool CAI_BlendedMotor::AddTurnGesture( float flYD )
 {
-
-	// some funky bug with human turn gestures, disable for now
-	return false;
-
 	// try using a turn gesture
 	Activity activity = ACT_INVALID;
 	float weight = 1.0;
