@@ -122,7 +122,6 @@ static inline int FindMatchLength(const char* s1,
                                   const char* s2,
                                   const char* s2_limit) {
   // Implementation based on the x86-64 version, above.
-  DCHECK_GE(s2_limit, s2);
   int matched = 0;
 
   while (s2 <= s2_limit - 4 &&
