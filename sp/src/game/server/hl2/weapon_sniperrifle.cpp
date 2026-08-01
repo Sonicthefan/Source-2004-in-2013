@@ -5,11 +5,18 @@
 //			Primary attack: fires a single high-powered shot, then reloads.
 //			Secondary attack: cycles sniper scope through zoom levels.
 //
-// TODO: Circular mask around crosshairs when zoomed in.
-// TODO: Shell ejection.
-// TODO: Finalize kickback.
-// TODO: Animated zoom effect?
+// TODO: Circular mask around crosshairs when zoomed in. Can be achieved by
+//		 modifying weapon_sniperrifle.txt.
+// 
+// TODO: Shell ejection. Can be achieved by modifying the Sniper Rifle viewmodel.
 //
+// TODO: Finalize kickback. Check PrimaryAttack's vecPunch variable.
+//
+// TODO: Animated zoom effect? Can be achieved by adding a number that signifies
+//		 zoom rate after FOV amount in every pPlayer->SetFOV line.
+//		 i.e. pPlayer->SetFOV(this, 0, 0.2f);
+//
+// $NoKeywords: $FixedByTheMaster974
 //=============================================================================//
 
 #include "cbase.h"
@@ -71,6 +78,7 @@ public:
 	virtual float GetFireRate( void ) { return 1; };
 
 	void Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator );
+	void SecondaryAttack(void); // Addition.
 
 	DECLARE_ACTTABLE();
 
@@ -78,6 +86,7 @@ protected:
 
 	float m_fNextZoom;
 	int m_nZoomLevel;
+	color32 lightRed; // Addition.
 };
 
 IMPLEMENT_SERVERCLASS_ST(CWeaponSniperRifle, DT_WeaponSniperRifle)
@@ -90,6 +99,7 @@ BEGIN_DATADESC( CWeaponSniperRifle )
 
 	DEFINE_FIELD( m_fNextZoom, FIELD_FLOAT ),
 	DEFINE_FIELD( m_nZoomLevel, FIELD_INTEGER ),
+	DEFINE_FIELD( lightRed, FIELD_COLOR32 ), // Addition.
 
 END_DATADESC()
 
@@ -118,6 +128,8 @@ CWeaponSniperRifle::CWeaponSniperRifle( void )
 	m_fMinRange2		= 65;
 	m_fMaxRange1		= 2048;
 	m_fMaxRange2		= 2048;
+
+	lightRed = { 248, 98, 0, 32 }; // Addition.
 }
 
 
@@ -146,6 +158,7 @@ bool CWeaponSniperRifle::Holster( CBaseCombatWeapon *pSwitchingTo )
 			{
 				pPlayer->ShowViewModel(true);		
 				m_nZoomLevel = 0;
+				UTIL_ScreenFade(pPlayer, lightRed, 0.2f, 0, (FFADE_IN | FFADE_PURGE)); // Addition.
 			}
 		}
 	}
@@ -171,6 +184,11 @@ void CWeaponSniperRifle::ItemPostFrame( void )
 		m_bInReload = false;
 	}
 
+// ---------------------------------------------------------------------------------
+// Removed to allow for the zooming functionality to work between level transitions.
+// ---------------------------------------------------------------------------------
+
+	/*
 	if (pPlayer->m_nButtons & IN_ATTACK2)
 	{
 		if (m_fNextZoom <= gpGlobals->curtime)
@@ -244,6 +262,8 @@ void CWeaponSniperRifle::ItemPostFrame( void )
 		WeaponIdle( );
 		return;
 	}
+	*/
+	BaseClass::ItemPostFrame(); // Addition.
 }
 
 
@@ -270,6 +290,28 @@ bool CWeaponSniperRifle::Reload( void )
 	{
 		return false;
 	}
+
+// ----------------------------------------------------------------------------
+// Addition, remove this section if you want to stay scoped in while reloading.
+// ----------------------------------------------------------------------------
+
+	CBasePlayer* pPlayer = ToBasePlayer(GetOwner()); // Need this for SetFOV.
+	if (pOwner != NULL)
+	{
+		if (m_nZoomLevel != 0)
+		{
+			if (pPlayer->SetFOV(this, 0))
+			{
+				pPlayer->ShowViewModel(true);
+				m_nZoomLevel = 0;
+				UTIL_ScreenFade(pPlayer, lightRed, 0.2f, 0, (FFADE_IN | FFADE_PURGE));
+			}
+		}
+	}
+
+// ---------------
+// End of section!
+// ---------------
 		
 	if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) > 0)
 	{
@@ -352,7 +394,6 @@ void CWeaponSniperRifle::PrimaryAttack( void )
 	pPlayer->SetMuzzleFlashTime( gpGlobals->curtime + 0.5 );
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: Zooms in using the sniper rifle scope.
 //-----------------------------------------------------------------------------
@@ -373,12 +414,17 @@ void CWeaponSniperRifle::Zoom( void )
 			// Zoom out to the default zoom level
 			WeaponSound(SPECIAL2);	
 			m_nZoomLevel = 0;
+			UTIL_ScreenFade(pPlayer, lightRed, 0.2f, 0, (FFADE_IN | FFADE_PURGE)); // Addition.
 		}
 	}
 	else
 	{
 		if ( pPlayer->SetFOV( this, g_nZoomFOV[m_nZoomLevel] ) )
 		{
+// -------------------------------
+// Slightly reworked this section.
+// -------------------------------
+			/*
 			if (m_nZoomLevel == 0)
 			{
 				pPlayer->ShowViewModel(false);
@@ -387,8 +433,22 @@ void CWeaponSniperRifle::Zoom( void )
 			WeaponSound(SPECIAL1);
 			
 			m_nZoomLevel++;
+			*/
+
+			WeaponSound(SPECIAL1);
+			m_nZoomLevel++;
+			UTIL_ScreenFade(pPlayer, lightRed, 0.2f, 0, (FFADE_OUT | FFADE_PURGE | FFADE_STAYOUT));
 		}
 	}
+
+// ---------------------------------------------
+// Addition to show/hide viewmodel when zooming.
+// ---------------------------------------------
+
+	if (m_nZoomLevel < 1)
+		pPlayer->ShowViewModel(true);
+	else
+		pPlayer->ShowViewModel(false);
 
 	m_fNextZoom = gpGlobals->curtime + SNIPER_ZOOM_RATE;
 }
@@ -445,3 +505,17 @@ void CWeaponSniperRifle::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCom
 	}
 }
 
+// ----------------------------------------------------------------------------
+// Purpose: Allow the zooming functionality to work between level transitions.
+// ----------------------------------------------------------------------------
+void CWeaponSniperRifle::SecondaryAttack(void)
+{
+	// Delay the next secondary attack, to prevent zoom spam.
+	m_flNextSecondaryAttack = gpGlobals->curtime + 0.5f;
+
+	CBasePlayer* pOwner = ToBasePlayer(GetOwner());
+	if (!pOwner)
+		return;
+
+	Zoom();
+}

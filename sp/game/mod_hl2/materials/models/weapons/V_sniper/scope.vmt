@@ -1,0 +1,7 @@
+"VertexLitGeneric"
+{
+	// Original shader: VertexLitTexture
+	"$basetexture" "models/Weapons/V_sniper/scope"
+        "$bumpmap" "models/Weapons/V_sniper/scope_normal"
+
+}
